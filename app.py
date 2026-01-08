@@ -1,48 +1,67 @@
 import streamlit as st
 import pandas as pd
 
-# CẤU HÌNH TRANG
 st.set_page_config(
     page_title="IT Job Dashboard",
+    page_icon="💼",
     layout="wide"
 )
 
-st.title("📊 Dashboard việc làm ngành IT")
+st.title("📊 Dashboard Phân Tích Việc Làm IT trên https://123job.vn")
+st.markdown("---")
 
-# LOAD DATA
 @st.cache_data
 def load_data():
-    return pd.read_csv("data/cleaned_jobs.csv")
+    try:
+        return pd.read_csv("data/cleaned_jobs.csv")
+    except FileNotFoundError:
+        return pd.DataFrame()
 
 df = load_data()
 
-# SIDEBAR - CHỌN VỊ TRÍ
-st.sidebar.header("🔍 Lọc vị trí IT")
+if df.empty:
+    st.error("Chưa có dữ liệu. Hãy chạy crawl_data.py và clean_data.py!")
+    st.stop()
 
-positions = sorted(df["position_search"].unique())
-selected_position = st.sidebar.selectbox(
-    "Chọn vị trí:",
-    positions
-)
+# --- SIDEBAR ---
+with st.sidebar:
+    st.header("🔍 Bộ Lọc")
+    positions = ["Tất cả"] + sorted(df["position_search"].unique().tolist())
+    selected_position = st.selectbox("Chọn vị trí:", positions)
 
-filtered_df = df[df["position_search"] == selected_position]
+if selected_position != "Tất cả":
+    filtered_df = df[df["position_search"] == selected_position]
+else:
+    filtered_df = df
 
-st.subheader(f"📌 {selected_position} — {len(filtered_df)} công việc")
+# --- METRICS ---
+c1, c2, c3 = st.columns(3)
+c1.metric("Số lượng công việc", len(filtered_df))
+c2.metric("Vị trí", selected_position)
+c3.metric("Nguồn", "123job.vn")
+st.markdown("---")
 
-# HIỂN THỊ JOB
-for _, row in filtered_df.iterrows():
+# --- DANH SÁCH JOB ---
+st.subheader(f"📌 Danh sách công việc ({len(filtered_df)} jobs)")
+
+for index, row in filtered_df.iterrows():
     with st.container():
-        st.markdown(f"### 🔹 {row['job_name']}")
-        st.markdown(f"🏢 **Công ty:** {row['company']}")
-        st.markdown(f"📍 **Địa điểm:** {row['location']}")
-        st.markdown(f"💰 **Lương:** {row['salary']}")
-        st.markdown(f"🧠 **Kinh nghiệm:** {row['experience']}")
-
-        # Yêu cầu công việc (expand)
-        with st.expander("📋 Yêu cầu công việc"):
-            st.text(row["job_requirements"])
-
-        # Link chi tiết
-        st.markdown(f"[🔗 Xem chi tiết]({row['job_link']})")
-
+        # Header
+        st.markdown(f"### 👉 [{row['job_name']}]({row['job_link']})")
+        
+        # Thông tin cơ bản
+        c1, c2, c3, c4 = st.columns(4)
+        c1.markdown(f"🏢 **Công ty:** {row['company']}")
+        c2.markdown(f"📍 **Địa điểm:** {row['location']}")
+        c3.markdown(f"💰 **Lương:** {row['salary']}")
+        c4.markdown(f"🧠 **Kinh nghiệm:** {row['experience']}")
+        
+        # Phần nội dung (Giữ giao diện cũ)
+        with st.expander("📝 Xem chi tiết nội dung công việc"):
+            if row['job_description'] != "N/A":
+                # st.markdown sẽ render #### thành tiêu đề to và đậm
+                st.markdown(row['job_description'])
+            else:
+                st.warning("Chưa có thông tin mô tả.")
+        
         st.divider()

@@ -3,6 +3,9 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 from datetime import datetime
+import time
+import random
+import re
 
 # CẤU HÌNH
 JOB_POSITIONS = [
@@ -21,14 +24,12 @@ JOB_POSITIONS = [
 BASE_URL = "https://123job.vn"
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 }
 
-# BUILD SEARCH URL
 def build_search_url(job_name):
     return f"{BASE_URL}/tuyen-dung?q={job_name.replace(' ', '+')}"
 
-# MAIN CRAWLER
 def crawl_jobs():
     all_jobs = []
 
@@ -36,89 +37,95 @@ def crawl_jobs():
         print(f"🔍 Đang crawl vị trí: {position}")
         url = build_search_url(position)
 
-        response = requests.get(url, headers=HEADERS, timeout=15)
-        if response.status_code != 200:
-            print(f"❌ Không truy cập được: {url}")
-            continue
+        try:
+            response = requests.get(url, headers=HEADERS, timeout=15)
+            soup = BeautifulSoup(response.text, "html.parser")
+            job_items = soup.find_all("div", class_="job__list-item")
+            
+            # In ra số lượng tìm thấy để bạn kiểm tra
+            print(f"   -> Tìm thấy {len(job_items)} công việc trên trang này.")
 
-        soup = BeautifulSoup(response.text, "html.parser")
-        job_items = soup.find_all("div", class_="job__list-item-content")
-
-        print(f"➡ Tìm thấy {len(job_items)} job")
-
-        for job in job_items:
-            title_tag = job.find("a")
-
-            job_name = title_tag.text.strip() if title_tag else "N/A"
-            job_link = title_tag["href"] if title_tag else "N/A"
-
-            # 🔧 Fix link tương đối
-            if job_link.startswith("/"):
-                job_link = BASE_URL + job_link
-
-            company = job.find("div", class_="job__list-item-company")
-            location = job.find("div", class_="address")
-            salary = job.find("div", class_="salary")
-
-            experience = "N/A"
-            requirements = "N/A"
-
-            # TRANG CHI TIẾT
-            if job_link != "N/A":
+            # --- THAY ĐỔI Ở ĐÂY: Đã bỏ [:10] để chạy hết danh sách ---
+            for item in job_items: 
                 try:
-                    detail_res = requests.get(job_link, headers=HEADERS, timeout=15)
-                    if detail_res.status_code == 200:
-                        detail_soup = BeautifulSoup(detail_res.text, "html.parser")
+                    # 1. Lấy thông tin cơ bản
+                    title_tag = item.find("h2", class_="job__list-item-title")
+                    if not title_tag: continue
+                    a_tag = title_tag.find("a")
+                    job_name = a_tag.get_text(strip=True)
+                    job_link = a_tag["href"]
+                    if not job_link.startswith("http"):
+                        job_link = BASE_URL + job_link
 
-                        # Kinh nghiệm
-                        attr_items = detail_soup.find_all("div", class_="attr-item")
-                        for item in attr_items:
-                            label_div = item.find("div", class_="text mb-1")
+                    company_tag = item.find("div", class_="job__list-item-company")
+                    company = company_tag.find("span").get_text(strip=True) if company_tag else "N/A"
 
-                            if label_div and "Kinh nghiệm" in label_div.text:
-                                value_div = item.find("div", class_="value")
-                                if value_div:
-                                    experience = value_div.text.strip()
-                                break
+                    # 2. VÀO TRANG CHI TIẾT
+                    experience = "N/A"
+                    salary = "N/A"
+                    location = "N/A"
+                    full_description = "N/A"
+                    
+                    # Tăng delay một chút để an toàn khi crawl số lượng lớn hơn
+                    time.sleep(random.uniform(0.8, 1.5)) 
+                    
+                    try:
+                        res_detail = requests.get(job_link, headers=HEADERS, timeout=10)
+                        soup_detail = BeautifulSoup(res_detail.text, "html.parser")
+
+                        # LOGIC QUÉT ATTR-ITEM (Lấy Lương, Kinh nghiệm, Địa điểm)
+                        attr_items = soup_detail.find_all("div", class_="attr-item")
+                        
+                        for attr in attr_items:
+                            full_text = attr.get_text(strip=True).lower()
+                            value_div = attr.find("div", class_="value")
                             
-                        # Yêu cầu công việc
-                        for group in detail_soup.find_all("div", class_="content-group"):
-                            title = group.find("h2")
-                            if title and "Yêu cầu công việc" in title.text:
-                                content = group.find("div", class_="content-group__content")
-                                requirements = (
-                                    content.get_text(separator="\n").strip()
-                                    if content else "N/A"
-                                )
-                except Exception as e:
-                    print(f"⚠ Lỗi khi crawl chi tiết: {job_link}")
+                            if value_div:
+                                value_text = value_div.get_text(strip=True)
+                                if "kinh nghiệm" in full_text:
+                                    experience = value_text
+                                elif "lương" in full_text:
+                                    salary = value_text
+                                elif "địa điểm" in full_text:
+                                    location = value_text
 
-            all_jobs.append({
-                "position_search": position,
-                "job_name": job_name,
-                "job_link": job_link,
-                "company": company.text.strip() if company else "N/A",
-                "location": location.text.strip() if location else "N/A",
-                "salary": salary.text.strip() if salary else "N/A",
-                "experience": experience,
-                "job_requirements": requirements,
-                "crawl_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            })
+                        # Fallback cho Location nếu chưa tìm thấy
+                        if location == "N/A":
+                            address_div = soup_detail.find("div", class_="job-detail__info-address")
+                            if address_div:
+                                location = address_div.get_text(strip=True).replace("Địa điểm làm việc:", "").strip()
+
+                        # Lấy Nội Dung
+                        content_div = soup_detail.find("div", class_="content-collapse")
+                        if content_div:
+                             full_description = content_div.get_text(separator="\n").strip()
+                        
+                    except Exception as e:
+                        print(f"⚠ Lỗi detail link: {e}")
+
+                    all_jobs.append({
+                        "position_search": position,
+                        "job_name": job_name,
+                        "job_link": job_link,
+                        "company": company,
+                        "location": location,
+                        "salary": salary,
+                        "experience": experience,
+                        "job_description": full_description,
+                        "crawl_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    })
+
+                except Exception as e:
+                    print(f"⚠ Lỗi item: {e}")
+                    continue
+
+        except Exception as e:
+            print(f"❌ Lỗi mạng: {url}")
 
     return pd.DataFrame(all_jobs)
 
-# RUN & SAVE
 if __name__ == "__main__":
     os.makedirs("data", exist_ok=True)
-
     df = crawl_jobs()
-
     print(f"\n✅ Tổng số job crawl được: {len(df)}")
-
-    df.to_csv(
-        "data/raw_jobs.csv",
-        index=False,
-        encoding="utf-8-sig"
-    )
-
-    print("📁 Đã lưu file: data/raw_jobs.csv")
+    df.to_csv("data/raw_jobs.csv", index=False, encoding="utf-8-sig")
