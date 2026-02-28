@@ -13,14 +13,14 @@ st.markdown("---")
 @st.cache_data
 def load_data():
     try:
-        return pd.read_csv("data/cleaned_jobs.csv")
+        return pd.read_csv("clean/data/cleaned_jobs.csv")
     except FileNotFoundError:
         return pd.DataFrame()
 
 df = load_data()
 
 if df.empty:
-    st.error("Chưa có dữ liệu. Hãy chạy crawl_data.py và clean_data.py!")
+    st.error("Chưa có dữ liệu.")
     st.stop()
 
 # --- SIDEBAR ---
@@ -56,10 +56,9 @@ for index, row in filtered_df.iterrows():
         c3.markdown(f"💰 **Lương:** {row['salary']}")
         c4.markdown(f"🧠 **Kinh nghiệm:** {row['experience']}")
         
-        # Phần nội dung (Giữ giao diện cũ)
+        # Phần nội dung
         with st.expander("📝 Xem chi tiết nội dung công việc"):
             if row['job_description'] != "N/A":
-                # st.markdown sẽ render #### thành tiêu đề to và đậm
                 st.markdown(row['job_description'])
             else:
                 st.warning("Chưa có thông tin mô tả.")

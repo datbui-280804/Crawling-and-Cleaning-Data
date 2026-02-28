@@ -1,12 +1,28 @@
-# Data
+# Data (Đã có trong hình của bạn)
 data/*.csv
 
-# Jupyter
+# Jupyter Notebook
 .ipynb_checkpoints/
+*/.ipynb_checkpoints/
 
-# Python
+# Python environment & cache
 __pycache__/
-*.pyc
+*/__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+ENV/
 
 # Streamlit
 .streamlit/
+
+# IDE - Visual Studio Code
+.vscode/
+*/.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
