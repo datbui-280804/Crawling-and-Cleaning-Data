@@ -1,6 +1,27 @@
 import pandas as pd
 import re
 import os
+from sqlalchemy import create_engine
+
+def load_to_postgres(df):
+    
+    # Cấu hình thông tin kết nối 
+    DB_USER = 'postgres'
+    DB_PASSWORD = 'postgres' 
+    DB_HOST = 'localhost'
+    DB_PORT = '5432'
+    DB_NAME = 'IT_job_data'
+
+    try:
+        # Tạo kết nối đến database
+        engine = create_engine(f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}')
+        
+        # Đẩy DataFrame vào database
+        df.to_sql('it_jobs', engine, if_exists='replace', index=False)
+        
+        print("✅ Đã load dữ liệu vào DB.")
+    except Exception as e:
+        print(f"❌ Lỗi khi đẩy dữ liệu vào Database: {e}")
 
 def clean_jobs():
     print("🚀 Đang bắt đầu tiến trình làm sạch dữ liệu...")
@@ -27,7 +48,7 @@ def clean_jobs():
             print("⚠️ Cảnh báo: File dữ liệu rỗng.")
             return
 
-        # 1. Xử lý trùng lặp
+        # 1. XỬ LÝ TRÙNG LẶP
         df.drop_duplicates(subset=["job_link"], inplace=True)
 
         # 2. KIỂM TRA VÀ XÓA DÒNG THIẾU DỮ LIỆU
@@ -40,7 +61,7 @@ def clean_jobs():
         for col in cols_to_check:
             # Lọc bỏ các dòng có giá trị null thực sự (NaN)
             df = df[df[col].notna()]
-            # Lọc bỏ các dòng chứa chuỗi "N/A", "nan", rỗng (do crawler ghi vào)
+            # Lọc bỏ các dòng chứa chuỗi "N/A", "nan", rỗng 
             df = df[~df[col].astype(str).str.strip().str.lower().isin(["n/a", "nan", "", "none"])]
 
         after_drop = len(df)
@@ -108,7 +129,9 @@ def clean_jobs():
 
         # 6. LƯU FILE
         df.to_csv(output_file, index=False, encoding="utf-8-sig")
-        print(f"✅ THÀNH CÔNG! Đã lưu {len(df)} dòng hoàn chỉnh vào:\n   -> {output_file}")
+        print(f"✅ THÀNH CÔNG! Đã lưu {len(df)} dòng data sạch.")
+        # 7. ĐẨY DỮ LIỆU VÀO DATABASE
+        load_to_postgres(df)
 
     except PermissionError:
         print(f"❌ LỖI: Không thể ghi file.")
