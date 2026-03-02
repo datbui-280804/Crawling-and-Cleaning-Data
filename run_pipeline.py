@@ -2,10 +2,7 @@ import subprocess
 import time
 import os
 
-def run_script(script_name, working_dir):
-    print(f"\n{'='*50}")
-    print(f"{'='*50}\n")
-    
+def run_script(script_name, working_dir):    
     start_time = time.time()
     
     try:
@@ -20,7 +17,7 @@ def run_script(script_name, working_dir):
         return True
         
     except subprocess.CalledProcessError as e:
-        print(f"\n❌ LỖI NGHIÊM TRỌNG TẠI BƯỚC: {script_name}")
+        print(f"\n❌ LỖI NGHIÊM TRỌNG TẠI: {script_name}")
         print(f"Chi tiết mã lỗi: {e.returncode}")
         return False
     except FileNotFoundError:
@@ -28,7 +25,7 @@ def run_script(script_name, working_dir):
         return False
 
 def main():
-    print("🚀 BẮT ĐẦU CHẠY TOÀN BỘ LUỒNG DỮ LIỆU (ETL PIPELINE) 🚀")
+    print("🚀 BẮT ĐẦU CHẠY DỰ ÁN")
     total_start_time = time.time()
     
     # Lấy đường dẫn tuyệt đối của thư mục gốc

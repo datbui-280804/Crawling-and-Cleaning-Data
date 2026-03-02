@@ -8,16 +8,35 @@ import random
 
 # CẤU HÌNH
 JOB_POSITIONS = [
-    "Tester",
     "Backend Developer",
     "Frontend Developer",
     "Fullstack Developer",
+    "Mobile Developer",
+    "Game Developer",
+    
     "Data Engineer",
     "Data Analyst",
     "Data Scientist",
-    "DevOps Engineer",
     "AI Engineer",
-    "Mobile Developer"
+    "Machine Learning Engineer",
+    
+    "Tester",
+    "QA Engineer",
+    "QC Engineer",
+    "Automation Test",
+    
+    "DevOps Engineer",
+    "Cloud Engineer",
+    "System Administrator",
+    "Network Engineer",
+    "Security Engineer",
+    "Embedded Engineer",
+    
+    "Business Analyst", 
+    "Product Manager",
+    "Project Manager",
+    "Scrum Master",
+    "UI/UX Designer"
 ]
 
 BASE_URL = "https://123job.vn"
@@ -73,7 +92,7 @@ def crawl_jobs():
                         location = "N/A"
                         full_description = "N/A"
                         
-                        time.sleep(random.uniform(0.8, 1.5)) # Giữ delay để tránh bị khóa IP
+                        time.sleep(random.uniform(1.5, 3.0)) # Giữ delay để tránh bị khóa IP
                         
                         try:
                             res_detail = requests.get(job_link, headers=HEADERS, timeout=10)
