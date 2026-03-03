@@ -5,7 +5,7 @@ x-airflow-common:
   image: apache/airflow:2.8.1-python3.11
   environment:
     - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-    - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:your_password@postgres:5432/it_jobs_db
+    - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:postgres@postgres:5432/IT_job_data
     - AIRFLOW__CORE__LOAD_EXAMPLES=False
     - _PIP_ADDITIONAL_REQUIREMENTS=pandas sqlalchemy psycopg2-binary beautifulsoup4 requests streamlit lxml
   volumes:
