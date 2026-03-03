@@ -18,7 +18,7 @@ st.markdown("---")
 def load_data_from_db():
     DB_USER = 'postgres'
     DB_PASSWORD = 'postgres' 
-    DB_HOST = 'localhost'
+    DB_HOST = 'postgres'
     DB_PORT = '5432'
     DB_NAME = 'IT_job_data'
     

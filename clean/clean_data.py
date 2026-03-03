@@ -8,7 +8,7 @@ def load_to_postgres(df):
     # Cấu hình thông tin kết nối 
     DB_USER = 'postgres'
     DB_PASSWORD = 'postgres' 
-    DB_HOST = 'localhost'
+    DB_HOST = 'postgres'
     DB_PORT = '5432'
     DB_NAME = 'IT_job_data'
 
