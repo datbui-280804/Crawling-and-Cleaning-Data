@@ -21,18 +21,17 @@ with DAG(
     tags=['it_jobs', 'etl']
 ) as dag:
 
-    # Task 1: Chạy file crawl_data.py
-    # Lệnh cd để đảm bảo file được chạy đúng thư mục chứa nó
+    # Task 1: Chạy task crawl
     crawl_task = BashOperator(
         task_id='extract_data',
         bash_command='cd /opt/airflow/crawl && python crawl_data.py'
     )
 
-    # Task 2: Chạy file clean_data.py
+    # Task 2: Chạy task clean & load vào DB
     clean_load_task = BashOperator(
         task_id='transform_and_load_data',
         bash_command='cd /opt/airflow/clean && python clean_data.py'
     )
 
-    # Thiết lập thứ tự chạy: Task 1 xong mới đến Task 2
+    # Thiết lập thứ tự chạy
     crawl_task >> clean_load_task

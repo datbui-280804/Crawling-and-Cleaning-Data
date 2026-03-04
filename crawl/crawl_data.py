@@ -140,7 +140,7 @@ def crawl_jobs():
                         print(f"      ⚠ Lỗi item: {e}")
                         continue
                 
-                # Chuyển sang trang tiếp theo sau khi quét xong trang hiện tại
+                # Chuyển sang trang tiếp theo sau khi quét xong 
                 page += 1
 
             except Exception as e:

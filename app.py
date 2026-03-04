@@ -58,7 +58,6 @@ else:
 col1, col2, col3 = st.columns(3)
 col1.metric("Số lượng công việc", len(filtered_df))
 col2.metric("Vị trí đang chọn", selected_position)
-col3.metric("Nguồn dữ liệu", "PostgreSQL Database")
 
 st.markdown("---")
 
